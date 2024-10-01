@@ -5,13 +5,14 @@ import { downloadTextFile } from "@/components/download"
 import { NewTaskForm } from "@/components/new-form"
 import { QrCodeGenerator } from "@/components/qr-code-generator"
 import { QrCodeScanner } from "@/components/qr-code-reader"
+import Stopwatch from "@/components/stopwatch"
 import { Task } from "@/components/Task"
 import { Button } from "@/components/ui/button"
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tab"
-import { Clipboard, Copy, Download, Eye, File, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, TextIcon, Upload } from "lucide-react"
+import { Check, Clipboard, Copy, Download, Eye, File, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, TextIcon, Upload, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Drawer = 'save' | 'load' | 'qr-code' | 'add' | undefined
@@ -24,6 +25,12 @@ export default function Component() {
 
     const [drawer, setDrawer] = useState<Drawer>()
     const [tab, setTab] = useState<'show' | 'scan'>('show')
+
+    const [timer, setTimer] = useState<boolean>(false)
+    const [time, setTime] = useState<number>(0)
+
+    // time are milliseconds
+    const minutes = useMemo(() => Math.floor(time / 60000), [time])
 
     useEffect(() => {
         generateSample()
@@ -134,7 +141,7 @@ export default function Component() {
     return (
         <div className="container mx-auto p-4 space-y-4">
             <div className="flex justify-between items-center">
-                <Drawer open={drawer === 'load'} onOpenChange={(open) => setDrawer(open ? 'load' : undefined)}>
+                <Drawer open={drawer === 'load'} onOpenChange={(open: boolean) => setDrawer(open ? 'load' : undefined)}>
                     <DrawerContent>
                         <DrawerHeader>
                             <DrawerTitle>Choose a way to upload!</DrawerTitle>
@@ -169,7 +176,7 @@ export default function Component() {
                 </Drawer>
 
 
-                <Drawer open={drawer === 'save'} onOpenChange={(open) => setDrawer(open ? 'save' : undefined)}>
+                <Drawer open={drawer === 'save'} onOpenChange={(open: boolean) => setDrawer(open ? 'save' : undefined)}>
                     <DrawerContent>
                         <DrawerHeader>
                             <DrawerTitle>Choose a way to save!</DrawerTitle>
@@ -200,7 +207,7 @@ export default function Component() {
                     </DrawerContent>
                 </Drawer>
 
-                <Drawer open={drawer === 'qr-code'} onOpenChange={(open) => setDrawer(open ? 'qr-code' : undefined)}>
+                <Drawer open={drawer === 'qr-code'} onOpenChange={(open: boolean) => setDrawer(open ? 'qr-code' : undefined)}>
                     <DrawerContent>
                         <DrawerHeader>
                             <DrawerTitle>Choose a way to save!</DrawerTitle>
@@ -228,46 +235,55 @@ export default function Component() {
                             </Tabs>
 
                             <DrawerClose>
-                                Cancel
+                                <Button variant="outline">Cancel</Button>
                             </DrawerClose>
 
                         </DrawerFooter>
                     </DrawerContent>
                 </Drawer>
 
-                <div className="flex wrap items-center gap-4">
+                <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="w-full flex wrap items-center gap-4">
 
-                    <Button onClick={() => setDrawer('load')}>
-                        <Plus className="mr-2 h-4 w-4" /> New
-                    </Button>
-
-                    <Button onClick={() => setDrawer('save')}>
-                        <Save className="mr-2 h-4 w-4" /> Save
-                    </Button>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger>
-                            <Button variant="outline">
-                                <MoreVerticalIcon className="h-4 w-4" />
+                        <div className="flex flex-1 gap-4">
+                            <Button onClick={() => setDrawer('load')}>
+                                <Plus className="mr-2 h-4 w-4" /> New
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuLabel>Options</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={generateSample}><Lightbulb className="mr-2 h-4 w-4" /> Generate Sample</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDrawer('qr-code')}><QrCode className="mr-2 h-4 w-4" /> QR Code</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDrawer('add')}><Plus className="mr-2 h-4 w-4" /> Add</DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+
+                            <Button onClick={() => setDrawer('save')}>
+                                <Save className="mr-2 h-4 w-4" /> Save
+                            </Button>
+                        </div>
+
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger>
+                                <Button variant="outline">
+                                    <MoreVerticalIcon className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>Options</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={generateSample}><Lightbulb className="mr-2 h-4 w-4" /> Generate Sample</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDrawer('qr-code')}><QrCode className="mr-2 h-4 w-4" /> QR Code</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setDrawer('add')}><Plus className="mr-2 h-4 w-4" /> Add item</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setTimer(!timer)}>{timer ? <X className="mr-2 h-4 w-4" /> : <Check className="mr-2 h-4 w-4" />} {timer ? 'Hide' : 'Show'} Timer</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+
+                    </div>
 
                     <Input
                         placeholder="Search tasks..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="max-w-sm"
+                        className="w-full"
                     />
                 </div>
             </div>
+
+            {timer && <Stopwatch onTimeUpdate={setTime} />}
 
 
             <DataTable
@@ -275,12 +291,13 @@ export default function Component() {
                 sortColumn={sortColumn}
                 handleSort={handleSort}
                 handleCheckboxChange={handleCheckboxChange}
+                minutes={minutes}
             />
 
             <NewTaskForm
                 defaultLocations={filteredTasks.map(task => task.location)}
                 open={drawer === 'add'}
-                onOpenChange={(open) => setDrawer(open ? 'add' : undefined)}
+                onOpenChange={(open: boolean) => setDrawer(open ? 'add' : undefined)}
                 submit={(task) => setTasks([...tasks, task])}
             />
 
