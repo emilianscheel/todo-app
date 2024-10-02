@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Dialog } from "@radix-ui/react-dialog"
+import { Pause, Play, StopCircle } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from 'react'
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog"
 
 type StopwatchProps = {
     onTimeUpdate: (time: number) => void
@@ -14,9 +18,33 @@ type StopwatchProps = {
 type DisplayFormat = 'minutes' | 'hh:mm:ss'
 
 export default function Stopwatch({ onTimeUpdate }: StopwatchProps) {
-    const [time, setTime] = useState(0)
+
+    const params = useSearchParams()
+    const router = useRouter()
+
+    const seconds = params.get('seconds')
+
+    const [stopDialogOpen, setStopDialogOpen] = useState<boolean>(false)
+
+    const [time, setTime] = useState<number>(0)
     const [isRunning, setIsRunning] = useState(false)
     const [displayFormat, setDisplayFormat] = useState<DisplayFormat>('hh:mm:ss')
+
+    useEffect(() => {
+        if (seconds) setTime(parseInt(seconds) * 1000)
+    }, [seconds])
+
+    useEffect(() => {
+        const seconds = time / 1000
+        if (seconds % 10 !== 0) return
+        const url = new URL(window.location.href)
+        const searchParams = new URLSearchParams(url.search)
+        searchParams.set('seconds', seconds.toString())
+        router.push(`?${searchParams.toString()}`, { scroll: true })
+    }, [time, router])
+
+
+
 
     useEffect(() => {
         let intervalId: NodeJS.Timeout
@@ -39,10 +67,15 @@ export default function Stopwatch({ onTimeUpdate }: StopwatchProps) {
     }, [])
 
     const stop = useCallback(() => {
-        setIsRunning(false)
         setTime(0)
+        setIsRunning(false)
         onTimeUpdate(0)
+        setStopDialogOpen(false)
     }, [onTimeUpdate])
+
+    const onStop = useCallback(() => {
+        setStopDialogOpen(true)
+    }, [])
 
     const toggleDisplayFormat = useCallback(() => {
         setDisplayFormat((prevFormat) => prevFormat === 'minutes' ? 'hh:mm:ss' : 'minutes')
@@ -50,7 +83,11 @@ export default function Stopwatch({ onTimeUpdate }: StopwatchProps) {
 
     const formatTime = (ms: number) => {
         if (displayFormat === 'minutes') {
-            const minutes = Math.floor(ms / 60000)
+            const minutes = Math.floor(ms / (60 * 1000))
+            const seconds = Math.floor((ms / 1000))
+            if (seconds < 60) {
+                return `${seconds} second${seconds !== 1 ? 's' : ''}`
+            }
             return `${minutes} minute${minutes !== 1 ? 's' : ''}`
         } else {
             const hours = Math.floor(ms / 3600000)
@@ -75,12 +112,29 @@ export default function Stopwatch({ onTimeUpdate }: StopwatchProps) {
             </CardContent>
             <CardFooter className="flex justify-center space-x-2">
                 <Button onClick={startPause}>
-                    {isRunning ? 'Pause' : 'Start'}
+                    {isRunning ? <Pause className="w-4 h-4 mr-2" /> : <Play className="w-4 h-4 mr-2" />}
+                    {isRunning ? 'Pause' : time > 0 ? 'Resume' : 'Start'}
                 </Button>
-                <Button onClick={stop} variant="outline">
+                <Button onClick={onStop} variant="outline">
+                    <StopCircle className="w-4 h-4 mr-2" />
                     Stop
                 </Button>
             </CardFooter>
+
+            <Dialog open={stopDialogOpen} onOpenChange={setStopDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Stop Stopwatch</DialogTitle>
+                        <DialogDescription>
+                            Stopping the stopwatch will reset the timer to 0. This step cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button onClick={stop}>Reset time</Button>
+                        <Button onClick={() => setStopDialogOpen(false)} variant="outline">Do not reset</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Card>
     )
 }

@@ -7,6 +7,7 @@ import { Input } from "./ui/input"
 import { Label } from "./ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import { Slider } from "./ui/slider"
+import { Switch } from "./ui/switch"
 
 export type NewTaskFormProps = {
     open: boolean,
@@ -33,12 +34,13 @@ export const NewTaskForm = ({
     const [time, setTime] = useState<number>(30)
     const [location, setLocation] = useState<string>("")
     const [task, setTask] = useState<string>("Pedro Duarte")
+    const [before, setBefore] = useState<boolean>(true)
 
     const handleSubmit = () => {
         submit({
             done: false,
             location: location,
-            relativeTime: time,
+            relativeTime: before ? -time : time,
             task: task,
             id: Math.floor(Math.random() * 1000),
         })
@@ -119,6 +121,19 @@ export const NewTaskForm = ({
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="username" className="text-right">
+                            Pivot
+                        </Label>
+
+                        <div className="col-span-3 flex items-center space-x-2">
+                            <Switch id="before" checked={before} onCheckedChange={() => setBefore(!before)} />
+                            <Label htmlFor="before">
+                                {before ? "Before" : "After"}
+                            </Label>
+                        </div>
+                    </div>
+
 
 
                     <div className="grid items-center gap-4">
@@ -131,7 +146,7 @@ export const NewTaskForm = ({
                                 check after how many minutes
                             </Label>
                             <h1 className="col-span-3 text-left mb-10 text-5xl font-black">
-                                {time} minutes
+                                {before && '-'}{time} minutes
                             </h1>
 
                             <Slider

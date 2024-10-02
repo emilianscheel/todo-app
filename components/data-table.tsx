@@ -1,4 +1,5 @@
 import { ArrowUpDown } from "lucide-react"
+import { useMemo } from "react"
 import { Task } from "./Task"
 import { Checkbox } from "./ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
@@ -10,7 +11,7 @@ export type DataTableProps = {
     sortColumn: keyof Task,
     handleSort: (column: keyof Task) => void
     handleCheckboxChange: (index: number) => void
-    minutes: number
+    seconds?: number
 }
 
 export const DataTable = ({
@@ -18,8 +19,10 @@ export const DataTable = ({
     sortColumn,
     handleSort,
     handleCheckboxChange,
-    minutes
+    seconds = 0
 }: DataTableProps) => {
+
+    const minutes = useMemo(() => Math.floor(seconds / 60), [seconds])
 
 
     return (
@@ -39,10 +42,12 @@ export const DataTable = ({
             <TableBody>
                 {items.map((task, index) => {
 
-                    const isSoon = task.relativeTime > minutes && task.relativeTime < (minutes + 5) && !task.done && minutes > 0
-                    const isVerySoon = task.relativeTime > minutes && task.relativeTime < (minutes + 2) && !task.done && minutes > 0
-                    const isOverdue = task.relativeTime <= minutes && !task.done && minutes > 0
-                    const isDone = task.done && minutes > 0
+                    const isTimerRunning = seconds > 0
+
+                    const isSoon = task.relativeTime > minutes && task.relativeTime < (minutes + 5) && !task.done && isTimerRunning
+                    const isVerySoon = task.relativeTime > minutes && task.relativeTime < (minutes + 2) && !task.done && isTimerRunning
+                    const isOverdue = task.relativeTime <= minutes && !task.done && isTimerRunning
+                    const isDone = task.done && isTimerRunning
 
                     return (
                         <TableRow key={index} className={`${isSoon ? 'bg-yellow-100 dark:bg-yellow-800' : ''} ${isVerySoon ? 'bg-orange-100 dark:bg-orange-800' : ''} ${isOverdue ? 'bg-red-100 dark:bg-red-800' : ''} ${isDone ? 'bg-green-100 dark:bg-green-800' : ''}`}>
@@ -50,10 +55,11 @@ export const DataTable = ({
                                 <Checkbox
                                     checked={task.done}
                                     onCheckedChange={() => handleCheckboxChange(task.id)}
+                                    className="w-8 h-8 rounded-lg"
                                 />
                             </TableCell>
                             <TableCell>
-                                <h1 className="text-lg font-black">
+                                <h1 className="text-xl font-black">
                                     {task.relativeTime}
                                 </h1>
                             </TableCell>

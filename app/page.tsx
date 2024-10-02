@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tab"
 import { openInNewTab } from "@/lib/openInNewTab"
 import { Check, Clipboard, Copy, Download, Eye, File, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, TextIcon, Upload, X } from "lucide-react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Drawer = 'save' | 'load' | 'qr-code' | 'add' | undefined
@@ -22,6 +22,7 @@ type Drawer = 'save' | 'load' | 'qr-code' | 'add' | undefined
 export default function Component() {
 
     const params = useSearchParams()
+    const router = useRouter()
 
     const data = params.get('data')
 
@@ -36,12 +37,9 @@ export default function Component() {
     const [timer, setTimer] = useState<boolean>(false)
     const [time, setTime] = useState<number>(0)
 
-    // time are milliseconds
-    const minutes = useMemo(() => Math.floor(time / 60000), [time])
+    const seconds = useMemo(() => Math.floor(time / 1000), [time])
 
-    useEffect(() => {
-        generateSample()
-    }, [])
+
 
     const generateSample = () => {
         setTasks([
@@ -50,6 +48,13 @@ export default function Component() {
             { done: false, relativeTime: 15, location: 'Gym', task: 'Workout', id: 3 },
         ])
     }
+
+    useEffect(() => generateSample(), [])
+
+    useEffect(() => {
+        const seconds = params.get('seconds')
+        if (seconds && parseInt(seconds) > 0) setTimer(true)
+    }, [params])
 
 
     const handleSort = (column: keyof Task) => {
@@ -61,17 +66,17 @@ export default function Component() {
         }
     }
 
-    const sortedTasks = [...tasks].sort((a, b) => {
+    const sortedTasks = useMemo(() => tasks.sort((a, b) => {
         if (a[sortColumn] < b[sortColumn]) return sortDirection === 'asc' ? -1 : 1
         if (a[sortColumn] > b[sortColumn]) return sortDirection === 'asc' ? 1 : -1
         return 0
-    })
+    }), [tasks, sortColumn, sortDirection])
 
-    const filteredTasks = sortedTasks.filter(task =>
+    const filteredTasks = useMemo(() => sortedTasks.filter(task =>
         Object.values(task).some(value =>
             value.toString().toLowerCase().includes(searchTerm.toLowerCase())
         )
-    )
+    ), [sortedTasks, searchTerm])
 
     const handleCheckboxChange = (id: number) => {
         const newTasks = [...tasks]
@@ -117,7 +122,6 @@ export default function Component() {
                 task: task.trim()
             }
         })
-        console.log(newTasks)
         setTasks(newTasks)
     }
 
@@ -157,6 +161,19 @@ export default function Component() {
     }
 
     const rawText = useMemo(() => exportText(), [exportText])
+
+
+    useEffect(() => {
+        console.log('updating url', rawText, filteredTasks)
+        const url = new URL(window.location.href)
+        const searchParams = new URLSearchParams(url.search)
+        searchParams.set('data', encodeURIComponent(rawText))
+        router.push(`?${searchParams.toString()}`, { scroll: true })
+    }, [rawText, router, filteredTasks])
+
+    useEffect(() => {
+        if (data) importText(decodeURIComponent(data))
+    }, [data])
 
     return (
         <div className="container mx-auto p-4 space-y-4">
@@ -267,20 +284,22 @@ export default function Component() {
 
                         <div className="flex flex-1 gap-4">
                             <Button onClick={() => setDrawer('load')}>
-                                <Plus className="mr-2 h-4 w-4" /> New
+                                <Upload className="mr-2 h-4 w-4" /> Load
                             </Button>
 
                             <Button onClick={() => setDrawer('save')}>
                                 <Save className="mr-2 h-4 w-4" /> Save
+                            </Button>
+
+                            <Button onClick={() => setDrawer('add')} variant="outline">
+                                <Plus className="mr-2 h-4 w-4" /> Add
                             </Button>
                         </div>
 
 
                         <DropdownMenu>
                             <DropdownMenuTrigger>
-                                <Button variant="outline">
-                                    <MoreVerticalIcon className="h-4 w-4" />
-                                </Button>
+                                <MoreVerticalIcon className="h-4 w-4" />
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuLabel>Options</DropdownMenuLabel>
@@ -311,7 +330,7 @@ export default function Component() {
                 sortColumn={sortColumn}
                 handleSort={handleSort}
                 handleCheckboxChange={handleCheckboxChange}
-                minutes={minutes}
+                seconds={seconds}
             />
 
             <NewTaskForm
