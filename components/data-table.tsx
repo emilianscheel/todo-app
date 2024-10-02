@@ -39,15 +39,13 @@ export const DataTable = ({
             <TableBody>
                 {items.map((task, index) => {
 
-
-
                     const isSoon = task.relativeTime > minutes && task.relativeTime < (minutes + 5) && !task.done && minutes > 0
                     const isVerySoon = task.relativeTime > minutes && task.relativeTime < (minutes + 2) && !task.done && minutes > 0
                     const isOverdue = task.relativeTime <= minutes && !task.done && minutes > 0
                     const isDone = task.done && minutes > 0
 
                     return (
-                        <TableRow key={index} className={`${isSoon ? 'bg-yellow-100' : ''} ${isVerySoon ? 'bg-orange-100' : ''} ${isOverdue ? 'bg-red-100' : ''} ${isDone ? 'bg-green-100' : ''}`}>
+                        <TableRow key={index} className={`${isSoon ? 'bg-yellow-100 dark:bg-yellow-800' : ''} ${isVerySoon ? 'bg-orange-100 dark:bg-orange-800' : ''} ${isOverdue ? 'bg-red-100 dark:bg-red-800' : ''} ${isDone ? 'bg-green-100 dark:bg-green-800' : ''}`}>
                             <TableCell>
                                 <Checkbox
                                     checked={task.done}

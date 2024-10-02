@@ -10,7 +10,6 @@ export const QrCodeScanner = ({
 
     const handleScan = (result: string | null) => {
         if (result) {
-            const parsedData = result.split('\n').map(row => row.split(','))
             onScan(result)
         }
     }

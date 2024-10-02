@@ -12,12 +12,19 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tab"
+import { openInNewTab } from "@/lib/openInNewTab"
 import { Check, Clipboard, Copy, Download, Eye, File, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, TextIcon, Upload, X } from "lucide-react"
+import { useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type Drawer = 'save' | 'load' | 'qr-code' | 'add' | undefined
 
 export default function Component() {
+
+    const params = useSearchParams()
+
+    const data = params.get('data')
+
     const [tasks, setTasks] = useState<Task[]>([])
     const [sortColumn, setSortColumn] = useState<keyof Task>('relativeTime')
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -110,8 +117,17 @@ export default function Component() {
                 task: task.trim()
             }
         })
+        console.log(newTasks)
         setTasks(newTasks)
     }
+
+    useEffect(() => {
+        console.log(data)
+        if (data) {
+            console.log('importing data')
+            importText(data)
+        }
+    }, [data])
 
     const exportText = useCallback(() => {
         return [
@@ -132,6 +148,10 @@ export default function Component() {
     }
 
     const onScan = (text: string) => {
+        if (text.startsWith(process.env.NEXT_PUBLIC_URL || 'http://localhost:3000')) {
+            openInNewTab(text)
+            return setDrawer(undefined)
+        }
         importText(text)
         setDrawer(undefined)
     }
@@ -226,10 +246,10 @@ export default function Component() {
                                         Scan
                                     </TabsTrigger>
                                 </TabsList>
-                                <TabsContent value="show" className="h-[70vh]">
-                                    <QrCodeGenerator text={rawText} />
+                                <TabsContent value="show" className="h-[60vh]">
+                                    <QrCodeGenerator text={rawText} url={process.env.NEXT_PUBLIC_URL} />
                                 </TabsContent>
-                                <TabsContent value="scan" className="h-[70vh]">
+                                <TabsContent value="scan" className="h-[60vh]">
                                     <QrCodeScanner onScan={onScan} />
                                 </TabsContent>
                             </Tabs>
