@@ -129,7 +129,7 @@ export default function Stopwatch({ onTimeUpdate }: StopwatchProps) {
                             Stopping the stopwatch will reset the timer to 0. This step cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <DialogFooter className="flex gap-2">
                         <Button onClick={stop}>Reset time</Button>
                         <Button onClick={() => setStopDialogOpen(false)} variant="outline">Do not reset</Button>
                     </DialogFooter>

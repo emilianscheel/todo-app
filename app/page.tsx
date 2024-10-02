@@ -12,8 +12,7 @@ import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, Dr
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tab"
-import { openInNewTab } from "@/lib/openInNewTab"
-import { Check, Clipboard, Copy, Download, Eye, File, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, TextIcon, Upload, X } from "lucide-react"
+import { Check, Clipboard, Copy, Download, Eye, Lightbulb, MoreVerticalIcon, Plus, QrCode, Save, ScanQrCode, Upload, X } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -153,18 +152,20 @@ export default function Component() {
 
     const onScan = (text: string) => {
         if (text.startsWith(process.env.NEXT_PUBLIC_URL || 'http://localhost:3000')) {
-            openInNewTab(text)
-            return setDrawer(undefined)
+            router.push(text)
+            setDrawer(undefined)
+            return
         }
-        importText(text)
-        setDrawer(undefined)
+        else {
+            importText(text)
+            setDrawer(undefined)
+        }
     }
 
     const rawText = useMemo(() => exportText(), [exportText])
 
 
     useEffect(() => {
-        console.log('updating url', rawText, filteredTasks)
         const url = new URL(window.location.href)
         const searchParams = new URLSearchParams(url.search)
         searchParams.set('data', encodeURIComponent(rawText))
@@ -222,11 +223,11 @@ export default function Component() {
                         <DrawerFooter>
 
                             <Button onClick={downloadCSV}>
-                                <Download className="mr-2 h-4 w-4" /> + <File className="mr-2 ml-2 h-4 w-4" /> Download CSV
+                                <Download className="mr-2 h-4 w-4" /> Download CSV
                             </Button>
 
                             <Button onClick={exportClipboard}>
-                                <Copy className="mr-2 h-4 w-4" /> + <TextIcon className="mr-2 ml-2 h-4 w-4" /> Copy CSV to Clipboard
+                                <Copy className="mr-2 h-4 w-4" />Copy CSV to Clipboard
                             </Button>
 
                             <Button onClick={() => {
@@ -264,7 +265,7 @@ export default function Component() {
                                     </TabsTrigger>
                                 </TabsList>
                                 <TabsContent value="show" className="h-[60vh]">
-                                    <QrCodeGenerator text={rawText} url={process.env.NEXT_PUBLIC_URL} />
+                                    <QrCodeGenerator text={rawText} />
                                 </TabsContent>
                                 <TabsContent value="scan" className="h-[60vh]">
                                     <QrCodeScanner onScan={onScan} />

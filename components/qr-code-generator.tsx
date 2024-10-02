@@ -8,14 +8,12 @@ import { Switch } from "./ui/switch";
 
 export type QRCodeGeneratorProps = {
     text: string
-    url?: string
     fileName?: string
 }
 
 
 export const QrCodeGenerator = ({
     text,
-    url,
     fileName = "qrcode.png"
 }: QRCodeGeneratorProps) => {
 
@@ -23,7 +21,7 @@ export const QrCodeGenerator = ({
 
     const [includeUrl, setIncludeUrl] = useState<boolean>(false)
 
-    const data = useMemo(() => includeUrl ? `${url}/?data=${encodeURIComponent(text)}` : text, [includeUrl, text, url])
+    const data = useMemo(() => includeUrl ? window.location.href : text, [includeUrl, text])
 
     const downloadQRCode = () => {
         const canvas = canvasRef.current;
@@ -65,7 +63,7 @@ export const QrCodeGenerator = ({
                 <div className="flex items-center space-x-2">
                     <Switch id="include-url" checked={includeUrl} onCheckedChange={() => setIncludeUrl(!includeUrl)} />
                     <Label htmlFor="include-url">
-                        {includeUrl ? "Include URL" : "Only CSV Data"}
+                        {includeUrl ? "Include URL, CSV Data and Timer" : "Only CSV Data"}
                     </Label>
                 </div>
 
