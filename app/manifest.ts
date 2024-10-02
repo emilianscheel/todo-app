@@ -8,7 +8,7 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Task',
         description: 'A simple task manager',
         start_url: '/',
-        display: 'standalone',
+        display: 'browser',
         background_color: '#ffffff',
         theme_color: '#000000',
         icons: [
